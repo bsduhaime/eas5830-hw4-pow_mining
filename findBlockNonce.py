@@ -18,7 +18,21 @@ def mine_block(k, prev_hash, transactions):
         print("mine_block expects positive integer")
         return b'\x00'
 
-    # TODO your code to find a nonce here
+    valid_nonce = False
+    nonce = 0
+    while not valid_nonce:
+        # Generate a hash summing previous hash, transaction lines, and a nonce
+        final_hash = hashlib.sha256(prev_hash)
+        for line in transactions:
+            final_hash.update(line.encode('utf-8'))
+        nonce = random.randbytes(k)
+        final_hash.update(nonce)
+        final_hash_num = int.from_bytes(final_hash.digest(), byteorder='big')
+
+        # Assess this hash if it meets trailing zero requirement
+        mask = (1 << k) - 1
+        masked_number = final_hash_num & mask
+        valid_nonce = (masked_number == 0)
 
     assert isinstance(nonce, bytes), 'nonce should be of type bytes'
     return nonce
@@ -52,5 +66,5 @@ if __name__ == '__main__':
     diff = 20
 
     transactions = get_random_lines(filename, num_lines)
-    nonce = mine_block(diff, transactions)
+    nonce = mine_block(diff, b"previous", transactions)
     print(nonce)
